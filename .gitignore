@@ -129,5 +129,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-mikro-orm.config.ts
+**/src/mikro-orm.config.ts
 constants.ts
