@@ -13,11 +13,47 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostResolver = void 0;
-const Post_1 = require("src/entities/Post");
+const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
 let PostResolver = class PostResolver {
-    posts({ em }) {
-        return em.find(Post_1.Post, {});
+    allPosts(ctx) {
+        console.log("getting all posts");
+        return ctx.em.find(Post_1.Post, {});
+    }
+    postById(id, { em }) {
+        return em.findOne(Post_1.Post, { id });
+    }
+    async createPost(title, { em }) {
+        const post = em.create(Post_1.Post, { title });
+        await em.persistAndFlush(post);
+        return post;
+    }
+    async updatePost(id, title, { em }) {
+        try {
+            const post = await em.findOneOrFail(Post_1.Post, { id });
+            if (typeof title != undefined && title != null) {
+                if (title.length != 0 && title.trim().length != 0) {
+                    post.title = title;
+                    em.persistAndFlush(post);
+                    return post;
+                }
+                console.log("cannot provide empty string");
+            }
+            console.error("title cannot be undefined or null");
+        }
+        catch (e) {
+            console.error("Failed to update post with id: ".concat(id.toString()));
+        }
+    }
+    async deletePost(id, { em }) {
+        try {
+            await em.nativeDelete(Post_1.Post, { id });
+            return true;
+        }
+        catch (e) {
+            console.log(e);
+            return false;
+        }
     }
 };
 __decorate([
@@ -26,7 +62,40 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], PostResolver.prototype, "posts", null);
+], PostResolver.prototype, "allPosts", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
+    __param(0, (0, type_graphql_1.Arg)("id", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "postById", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Post_1.Post),
+    __param(0, (0, type_graphql_1.Arg)("title")),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "createPost", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Post_1.Post),
+    __param(0, (0, type_graphql_1.Arg)("id")),
+    __param(1, (0, type_graphql_1.Arg)("title")),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "updatePost", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Post_1.Post),
+    __param(0, (0, type_graphql_1.Arg)("id")),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "deletePost", null);
 PostResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], PostResolver);
